@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Миссия: Повелитель времени — 50 заданий</title>
+<style>
+:root{font-family:system-ui,Arial,sans-serif;color:#25324a;background:#eaf3ff}*{box-sizing:border-box}
+body{margin:0;padding:18px;background:radial-gradient(circle at 0 0,#fff0c5,transparent 45%),linear-gradient(130deg,#e6f7ff,#f4e9ff);min-height:100vh}
+main{max-width:820px;margin:auto;background:#fff;border-radius:30px;padding:clamp(18px,5vw,36px);box-shadow:0 15px 45px #263c6727;text-align:center}
+h1{font-size:clamp(27px,6vw,44px);margin:10px 0}h2{font-size:clamp(22px,4vw,30px);line-height:1.35}p{font-size:18px;line-height:1.5}
+.emoji{font-size:65px}.pill{display:inline-block;background:#e8f0ff;color:#305c9b;padding:9px 16px;border-radius:30px;font-weight:750}
+.progress{height:15px;background:#e9edf5;border-radius:15px;overflow:hidden;margin:18px 0}.bar{height:100%;background:linear-gradient(90deg,#48cba1,#5798ed);transition:width .25s}
+.hidden{display:none!important}.buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:13px;margin:20px 0}
+button{border:0;border-radius:16px;background:#537de3;color:white;font-size:19px;padding:14px 19px;font-weight:750;cursor:pointer;min-height:54px}button:hover{filter:brightness(1.05)}button:disabled{cursor:default;opacity:.8}
+.option{background:#edf3ff;color:#24477c}.option.correct{background:#afe9c7;color:#176334}.option.wrong{background:#ffd4d4;color:#a52e2e}
+.clock{display:block;margin:auto;width:min(245px,100%);height:auto;touch-action:none;user-select:none}.clocks{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}.clockChoice{border:3px solid #dce7f6;background:#f8fbff;border-radius:18px;padding:7px;color:#385176}.clockChoice .clock{width:145px}.clockChoice.correct{border-color:#2fbc70;background:#e4f9ed}.clockChoice.wrong{border-color:#e46d6d;background:#fff0f0}
+.feedback{background:#fff4dd;border-radius:22px;padding:15px;margin:16px 0;font-size:20px}.feedback .emoji{font-size:56px}.controls{max-width:450px;margin:16px auto;padding:16px;background:#f2f6ff;border-radius:18px;text-align:left}.controls label{display:block;margin:12px 0;font-weight:700}.controls input{width:100%;accent-color:#537de3}
+.muted{color:#738098;font-size:15px}.code{display:inline-block;font-weight:900;font-size:clamp(25px,5vw,38px);color:#913fb5;letter-spacing:2px;border:3px dashed #b47add;border-radius:18px;padding:14px 22px;background:#f9eaff}
+@media(max-width:430px){.clockChoice .clock{width:112px}.emoji{font-size:50px}.clockChoice{padding:4px}button{font-size:17px}}
+</style>
+</head>
+<body><main>
+<section id="intro"><div class="emoji">🐱🕰️🚀</div><h1>Миссия: Повелитель времени</h1><p>Мемный кот запутался во времени! Помоги ему пройти <b>50 заданий</b> — от самых простых до сложных. В конце откроется секретный код и мемная награда.</p><span class="pill">2–3 класс · 5 уровней · без таймера</span><p>⭐ За правильный ответ с первой попытки получишь звезду. Ошибаться можно — игра подскажет!</p><button id="start">Начать миссию 🚀</button></section>
+<section id="game" class="hidden"><div id="level" class="pill"></div><p id="count"></p><div class="progress"><div id="bar" class="bar"></div></div><h2 id="question"></h2><div id="visual"></div><div id="choices" class="buttons"></div><div id="control"></div><div id="feedback" class="feedback hidden"></div><button id="next" class="hidden">Следующее задание ➜</button><p id="score">⭐ 0</p></section>
+<section id="ending" class="hidden"><div class="emoji">😼👑⏰</div><h1>Миссия выполнена!</h1><p id="result"></p><p>Секретный код повелителя времени:</p><div class="code">МЯУ-ТИК-ТАК-5000</div><p>🐱 «Я не опаздываю. Это часы слишком торопятся!»</p><p id="rank"></p><button id="again">Пройти ещё раз 🔁</button></section>
+<p class="muted">Каждый ответ можно исправить. Короткая стрелка — часовая, длинная — минутная.</p>
+</main><script>
+const $=id=>document.getElementById(id), pad=n=>String(n).padStart(2,'0'), time=(h,m)=>`${h}:${pad(m)}`;
+const tasks=[];
+// Уровень 1: чтение времени — целые часы, половины и четверти.
+[[3,0],[7,0],[10,30],[2,30],[6,15],[9,45],[12,0],[4,15],[8,30],[11,45]].forEach(([h,m],i)=>tasks.push({kind:'read',h,m,q:i<4?'Какое время показывают часы?':'Определи время по стрелкам.'}));
+// Уровень 2: выбор часов из трёх изображений.
+[[8,30],[5,45],[1,15],[12,45],[3,50],[7,10],[2,20],[9,35],[11,55],[6,40]].forEach(([h,m],i)=>tasks.push({kind:'choose',h,m,q:[
+ 'Найди часы, на которых 8:30.','Где без четверти шесть?','Найди четверть второго.','Где 12:45?',
+ 'На каких часах без десяти минут четыре?','Найди 7:10.','Где 2:20?','Найди 9:35.','Где без пяти двенадцать?','Найди 6:40.'
+][i]}));
+// Уровень 3: кот ошибается; надо назвать настоящее время.
+[[4,30,5,30],[3,0,3,30],[8,15,8,45],[11,30,10,30],[1,45,2,45],[6,10,6,50],[9,20,9,40],[12,15,12,45],[2,50,3,50],[7,35,7,25]].forEach(([wrongH,wrongM,h,m])=>tasks.push({kind:'cat',h,m,q:`😼 Кот говорит: «На часах ${time(wrongH,wrongM)}!» Исправь его ошибку.`}));
+// Уровень 4: задачи с переходом через час и временем суток.
+const stories=[
+ ['🐈 Кот начал играть в 14:00 и играл 30 минут. Когда закончил?',14,0,30],
+ ['🐸 Лягушка гуляла с 10:15 ещё 45 минут. Когда вернулась?',10,15,45],
+ ['🍕 Пиццу поставили в печь в 12:40 на 20 минут. Когда достали?',12,40,20],
+ ['🚌 Автобус отправился в 8:25 и ехал 35 минут. Когда приехал?',8,25,35],
+ ['🐶 Щенок уснул в 15:30 на 1 час 15 минут. Когда проснулся?',15,30,75],
+ ['🧠 Урок начался в 9:45 и длился 40 минут. Когда закончился?',9,45,40],
+ ['👑 Вечеринка началась в 18:50. Главный кот пришёл через 1 час 20 минут. Когда?',18,50,80],
+ ['🎬 Мультфильм начался в 16:35 и длился 50 минут. Когда закончился?',16,35,50],
+ ['🚂 Поезд отправился в 7:55 и ехал 1 час 10 минут. Когда прибыл?',7,55,70],
+ ['🍰 Торт поставили охлаждаться в 13:25 на 1 час 35 минут. Когда достали?',13,25,95]
+];
+stories.forEach(([q,h,m,mins])=>tasks.push({kind:'story',q,correct:time(Math.floor((h*60+m+mins)/60)%24,(m+mins)%60),h,m,mins}));
+// Уровень 5: своими руками установить стрелки.
+[[2,0],[6,30],[9,15],[4,45],[11,10],[7,25],[3,50],[12,40],[8,55],[5,35]].forEach(([h,m])=>tasks.push({kind:'move',h,m,q:`🎮 Выставь стрелки так, чтобы часы показывали ${time(h,m)}.`}));
+let index=0,stars=0,missed=false,done=false,drawH=12,drawM=0,dragHand=null;
+function clock(h,m,id='clock'){
+ let marks='',numbers='';
+ for(let i=0;i<60;i++){let a=i*Math.PI/30,r=i%5===0?99:105;marks+=`<line x1="${120+r*Math.sin(a)}" y1="${120-r*Math.cos(a)}" x2="${120+109*Math.sin(a)}" y2="${120-109*Math.cos(a)}" stroke="#92a8be" stroke-width="${i%5===0?2.2:1}"/>`}
+ for(let n=1;n<=12;n++){let a=n*Math.PI/6;numbers+=`<text x="${120+87*Math.sin(a)}" y="${126-87*Math.cos(a)}" text-anchor="middle" font-size="20" font-weight="800" fill="#2f4b79">${n}</text>`}
+ return `<svg class="clock" id="${id}" viewBox="0 0 240 240" role="img" aria-label="Часы со стрелками"><circle cx="120" cy="120" r="115" fill="#f5faff" stroke="#78a7e6" stroke-width="7"/>${marks}${numbers}<line id="${id}-hour" x1="120" y1="120" stroke="#285fc2" stroke-width="9" stroke-linecap="round"/><line id="${id}-minute" x1="120" y1="120" stroke="#ef893d" stroke-width="6" stroke-linecap="round"/><circle cx="120" cy="120" r="7" fill="#233451"/></svg>`;
+}
+function setHands(id,h,m){let ha=(h%12+m/60)*Math.PI/6,ma=m*Math.PI/30;let hh=$(id+'-hour'),mm=$(id+'-minute');if(!hh||!mm)return;hh.setAttribute('x2',120+52*Math.sin(ha));hh.setAttribute('y2',120-52*Math.cos(ha));mm.setAttribute('x2',120+79*Math.sin(ma));mm.setAttribute('y2',120-79*Math.cos(ma))}
+function distract(h,m){let base=h%12*60+m;return [base,(base+30)%720,(base+150)%720].map(v=>[Math.floor(v/60)||12,v%60])}
+function begin(){index=0;stars=0;$('intro').classList.add('hidden');$('ending').classList.add('hidden');$('game').classList.remove('hidden');render()}
+function render(){missed=false;done=false;dragHand=null;let t=tasks[index];$('level').textContent=['1 · Читаем часы','2 · Находим часы','3 · Исправляем кота','4 · Задачи со временем','5 · Двигаем стрелки'][Math.floor(index/10)];$('count').textContent=`Испытание ${index+1} из 50`;$('bar').style.width=index*2+'%';$('question').textContent=t.q;$('visual').innerHTML='';$('choices').innerHTML='';$('control').innerHTML='';$('feedback').classList.add('hidden');$('next').classList.add('hidden');$('score').textContent=`⭐ Звёзды: ${stars}`;
+ if(t.kind==='read'||t.kind==='cat'){
+  $('visual').innerHTML=clock(t.h,t.m);setHands('clock',t.h,t.m);
+  let opts=distract(t.h,t.m).map(([h,m])=>time(h,m));let correct=time(t.h,t.m);
+  // Ставим правильный ответ в разные позиции.
+  opts=opts.filter(x=>x!==correct);opts.splice(index%3,0,correct);addChoices(opts,correct);
+ }else if(t.kind==='choose'){
+  let opts=distract(t.h,t.m);let correct=time(t.h,t.m),order=[opts[1],opts[2]];order.splice(index%3,0,opts[0]);
+  $('visual').innerHTML='<div class="clocks">'+order.map(([h,m],i)=>`<button type="button" class="clockChoice" data-value="${time(h,m)}">${clock(h,m,'c'+i)}<span>Вариант ${i+1}</span></button>`).join('')+'</div>';
+  order.forEach(([h,m],i)=>setHands('c'+i,h,m));$('visual').querySelectorAll('button').forEach(b=>b.onclick=()=>answer(b,b.dataset.value,correct));
+ }else if(t.kind==='story'){
+  $('visual').innerHTML='<div class="emoji">🧩⏳</div>';
+  let total=t.h*60+t.m+t.mins;let opts=[t.correct,time(Math.floor((total+15)/60)%24,(total+15)%60),time(Math.floor((total+30)/60)%24,(total+30)%60)];
+  opts=[...new Set(opts)];opts.push(...[]);let shift=index%3;opts=[...opts.slice(shift),...opts.slice(0,shift)];addChoices(opts,t.correct);
+ }else setupMove();
+}
+function addChoices(opts,correct){opts.forEach(v=>{let b=document.createElement('button');b.type='button';b.className='option';b.textContent=v;b.onclick=()=>answer(b,v,correct);$('choices').append(b)})}
+function answer(button,value,correct){if(done)return;if(value!==correct){missed=true;button.classList.add('wrong');feedback('🙀','Почти! Проверь ещё раз: длинная стрелка показывает минуты, короткая — часы.');return}button.classList.add('correct');success()}
+function feedback(icon,msg){$('feedback').innerHTML=`<div class="emoji">${icon}</div><strong>${msg}</strong>`;$('feedback').classList.remove('hidden')}
+function success(){done=true;if(!missed)stars++;$('score').textContent=`⭐ Звёзды: ${stars}`;let memes=[['😎🐱','Мяу! Ты шаришь во времени!'],['🐸🎉','Лягушка аплодирует стоя!'],['🐱🔥','Кот говорит: «Это было мощно!»'],['👑😼','Тик-так, ты молодец!'],['🐈⭐','Ты поймал минутную стрелку!']];let [icon,msg]=memes[index%memes.length];feedback(icon,msg);document.querySelectorAll('#choices button').forEach(b=>b.disabled=true);let verify=$('verify');if(verify)verify.disabled=true;$('next').textContent=index===49?'Открыть секретный код 🏆':'Дальше ➜';$('next').classList.remove('hidden')}
+function setupMove(){drawH=12;drawM=0;$('visual').innerHTML=clock(drawH,drawM,'movable');setHands('movable',drawH,drawM);$('control').innerHTML='<div class="controls"><label>🔵 Часовая стрелка: <b id="hv">12</b><input id="hr" type="range" min="1" max="12" value="12"></label><label>🟠 Минутная стрелка: <b id="mv">00</b><input id="mr" type="range" min="0" max="59" value="0"></label><p class="muted">Можно тянуть стрелки по циферблату или пользоваться ползунками.</p></div><button id="verify">Проверить ✅</button>';
+ $('hr').oninput=e=>{drawH=+e.target.value;syncMove()};$('mr').oninput=e=>{drawM=+e.target.value;syncMove()};$('verify').onclick=()=>{let t=tasks[index];if(drawH===t.h&&drawM===t.m)success();else{missed=true;feedback('😹','Кот запутался! Посмотри на короткую и длинную стрелки и попробуй снова.')}};
+ let svg=$('movable');svg.addEventListener('pointerdown',e=>{if(done)return;let p=toLocal(svg,e),r=Math.hypot(p.x-120,p.y-120);dragHand=r<65?'hour':'minute';svg.setPointerCapture(e.pointerId);drag(e)});svg.addEventListener('pointermove',e=>{if(dragHand)drag(e)});svg.addEventListener('pointerup',()=>dragHand=null);svg.addEventListener('pointercancel',()=>dragHand=null)
+}
+function toLocal(svg,e){let p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+function drag(e){let p=toLocal($('movable'),e),deg=(Math.atan2(p.x-120,120-p.y)*180/Math.PI+360)%360;if(dragHand==='hour')drawH=Math.round(deg/30)%12||12;else drawM=Math.round(deg/6)%60;syncMove()}
+function syncMove(){setHands('movable',drawH,drawM);$('hr').value=drawH;$('mr').value=drawM;$('hv').textContent=drawH;$('mv').textContent=pad(drawM)}
+function advance(){if(index<49){index++;render()}else end()}
+function end(){$('game').classList.add('hidden');$('ending').classList.remove('hidden');$('result').textContent=`Ты прошёл все 50 испытаний и собрал ${stars} из 50 звёзд!`;$('rank').textContent=stars>=45?'🏆 Титул: МЕМНЫЙ МАГИСТР ЧАСОВ!':stars>=30?'🌟 Титул: УКРОТИТЕЛЬ МИНУТ!':'🐱 Титул: УЧЕНИК ВЕЛИКОГО КОТА!';$('bar').style.width='100%'}
+$('start').onclick=begin;$('again').onclick=begin;$('next').onclick=advance;
+</script></body></html>
